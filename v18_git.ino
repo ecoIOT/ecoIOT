@@ -1,10 +1,10 @@
 
 /* 
- *  V1.12 - Versão ecoIOT prototipo produção - Marina Buranhem
+ *  V1.18 - Versão ecoIOT prototipo produção - Marina Buranhem
   
  *
  * V0.6 - Sistema de Alimentação 5v
- * Placa Solar 5v > Conversor DC-DC 5v > Controlador de Carga > Bateria 12v 
+ * Placa Solar 5v > Conversor DC-DC 5v > Controlador de Carga > Bateria LiOn 3,7v 
 
  * >>>> NodeMCU + Shield NodeMCU >  
  * >>>> ADS1115 - expansão de porta analógica
@@ -99,7 +99,7 @@ const char* password = "########";
 
 
 //instaciando a função do thingspeak
-WiFiClient  client2;
+WiFiClient  client;
 
 
 //######## Conexão servidor Thingspeak ######## 
@@ -112,17 +112,6 @@ WiFiClient  client2;
 unsigned long myChannelNumber = #####;
 const char * myWriteAPIKey = "#######";
 
-//CANAL SECUNDÀRIO - mqtt (caso seja necessário)
-
-//char* topic="channels/<channelID/publish/<channelAPI>
-//char* server = "mqtt.thingspeak.com";
-
-WiFiClient wifiClient;
-PubSubClient client(server, 1883, wifiClient);
-
-//void callback(char* topic, byte* payload, unsigned int length) {
-  // handle message arrived
-//}
 
 
 //variáveis globais
@@ -132,7 +121,7 @@ float temp1;                     //variáveis que armazenam as temperaturas de c
 float temp2;
 float temp3;
 
-//variaveis BMP
+//variaveis BMP180
 float bmpTEMP;
 float bmpPa;
 
@@ -180,32 +169,8 @@ delay(500);
 
 
 //Ativando Thingspeak API
-ThingSpeak.begin(client2);
+ThingSpeak.begin(client);
 
-//Ativando Thingspeak MQTT
-String clientName="ecoIOT";
-  Serial.print("Connecting to ");
-  Serial.print(server);
-  Serial.print(" as ");
-  Serial.println(clientName);
-  
-  if (client.connect((char*) clientName.c_str())) {
-    Serial.println("Connected to MQTT broker");
-    Serial.print("Topic is: ");
-    Serial.println(topic);
-    
-    if (client.publish(topic, "hello from ESP8266")) {
-      Serial.println("Publish ok");
-    }
-    else {
-      Serial.println("Publish failed");
-    }
-  }
-  else {
-    Serial.println("MQTT connect failed");
-    Serial.println("Will reset and try again...");
-    abort();
-  }
 
 
 //ATIVANDO LUXIMETRO
@@ -223,7 +188,7 @@ String clientName="ecoIOT";
 void loop() 
 {
 
-//Leitura de pressão
+//Leitura de pressão ATM
     
     Serial.print("Temperature = ");
     bmpTEMP = bmp.readTemperature();
@@ -269,6 +234,7 @@ for(int i=0;i<10;i++)
 
 delay(2000);
 
+//Leitura de umidade  
 hum = dht.readHumidity();
 Serial.print("Umidade: ");
 Serial.println(hum);
@@ -385,7 +351,7 @@ temp2 = (((sensor2.getTempCByIndex(0) + 0.3125) * 100) / 99.3875) + 0;
 ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey); 
 
 
-//envio canal secundário
+//envio canal secundário (CASO ATIVADO)
 String sbmpTEMP = String(bmpTEMP);
 String stempDHT = String(tempDHT);
 //String stempDHT = String(counter);
